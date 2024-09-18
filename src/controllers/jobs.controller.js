@@ -30,18 +30,41 @@ const payForJob = async (req, res) => {
     await sequelize.transaction(async (transaction) => {
       // Inside this function, Sequelize operations are part of the transaction
 
-      const job = await Job.findOne({ where: { id: job_id }, include: Contract }, { transaction });
-      if (!job) return res.status(404).end();
+      // Fetch job details within the transaction and lock the row
+      const job = await Job.findOne({
+        where: { id: job_id },
+        include: Contract,
+        lock: transaction.LOCK.UPDATE,
+        transaction,
+      });
+      if (!job) throw new Error('Job not found');
+      if (profileId != job.Contract.ClientId) throw new Error('Job does not belong to client');
+      if (job.paid) throw new Error ('Job is already paid');
 
-      const client = await Profile.findOne({ where: { id: job.Contract.ClientId } }, { transaction });
-      const contractor = await Profile.findOne({ where: { id: job.Contract.ContractorId } }, { transaction });
+      // Fetch client profiles within the transaction and lock the rows
+      const client = await Profile.findOne({
+        where: { id: job.Contract.ClientId },
+        lock: transaction.LOCK.UPDATE,
+        transaction,
+      });
 
-      if (client.balance < job.price) return res.status(400).json({ error: 'Insufficient balance' });
+      // Fetch contractor profiles within the transaction and lock the rows
+      const contractor = await Profile.findOne({
+        where: { id: job.Contract.ContractorId },
+        lock: transaction.LOCK.UPDATE,
+        transaction,
+      });
+
+      if (!client || !contractor) throw new Error('Client or Contractor not found');
+
+      console.log( "client.balance =>", client.balance)
+      console.log( "job.price =>", job.price)
+
+      if (client.balance < job.price) throw new Error('Insufficient balance');
 
       // Update balances
       client.balance -= job.price;
       contractor.balance += job.price;
-      // contractor.status = 'terminated'  // assuming the job got completed after that only client is making payment.
       job.paid = true;
       job.paymentDate = new Date();
 
@@ -55,7 +78,7 @@ const payForJob = async (req, res) => {
     res.json({ message: 'Payment successful' });
   } catch (error) {
     console.error('Transaction failed:', error);
-    res.status(500).json({ error: 'Transaction failed' });
+    res.status(500).json({ error: 'Transaction failed', message: error.message });
   }
 }
 
