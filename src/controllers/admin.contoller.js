@@ -46,4 +46,47 @@ const getBestProfession = async (req, res) => {
   res.json(result);
 }
 
-module.exports = { getBestProfession }
+const getBestClients = async (req, res) => {
+  const { start, end, limit = 2 } = req.query;
+
+  try {
+    const clients = await Profile.findAll({
+      where: { type: 'client' },
+      attributes: [
+        'id', 'firstName', 'lastName',
+        [sequelize.fn('sum', sequelize.col('Client.Jobs.price')), 'totalPaid'] 
+      ],
+      include: [
+        {
+          model: Contract,
+          as: 'Client',
+          attributes: [], // Removed attributes to avoid including unnecessary fields
+          include: [
+            {
+              model: Job,
+              where: {
+                paid: true,
+                paymentDate: {
+                  [Op.between]: [new Date(start), new Date(end)]
+                }
+              },
+              attributes: [] // Removed attributes to avoid including unnecessary fields
+            }
+          ],
+          required: true // Added to ensure only contracts with jobs within the date range are included
+        }
+      ],
+      group: ['Profile.id'],  // Group by profile id to aggregate correctly
+      order: [[sequelize.literal('totalPaid'), 'DESC']],  // Order by total paid descending
+      limit: parseInt(limit, 10),
+      subQuery: false
+    });
+
+    res.json(clients);
+  } catch (error) {
+    console.error('Error fetching best clients:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+module.exports = { getBestProfession, getBestClients }
