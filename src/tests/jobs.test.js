@@ -1,10 +1,7 @@
 const request = require('supertest');
 const express = require('express');
 const bodyParser = require('body-parser');
-
-process.env.DB_PATH = process.env.TEST_DB == 'isolated' ? './jestTestDb/db01.sqlite3' : './jestTestDb.sqlite3'
 const sequelize = require('../config/db');
-
 const { Job, Contract, Profile } = require('../models');
 const jobsRoutes = require('../routes/jobs.route')
 

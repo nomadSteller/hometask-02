@@ -1,7 +1,5 @@
 
-process.env.DB_PATH = process.env.TEST_DB == 'isolated' ? './jestTestDb/db02.sqlite3' : './jestTestDb.sqlite3'
 const sequelize = require('../config/db');
-
 const { Job } = require('../models');
 
 beforeAll(async () => {
