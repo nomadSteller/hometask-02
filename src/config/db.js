@@ -1,8 +1,9 @@
 const Sequelize = require('sequelize');
+const { databaseConfig } = require('./env.constant')
 
 const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: './database.sqlite3'
+  dialect: databaseConfig.dialect,
+  storage: databaseConfig.storage
 });
 
 sequelize
