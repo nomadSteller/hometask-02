@@ -20,4 +20,20 @@ const getContractById = async (req, res) => {
   res.json(contract);
 };
 
-module.exports = { getContractById };
+const getContracts = async (req, res) => {
+  const profileId = req.profile.id;
+
+  const contracts = await Contract.findAll({ 
+    where: {
+      [Op.or]: [
+        { ClientId: profileId },
+        { ContractorId: profileId }
+      ],
+      status: { [Op.ne]: 'terminated' }
+    }
+  })
+
+  res.json(contracts)
+}
+
+module.exports = { getContractById, getContracts };
