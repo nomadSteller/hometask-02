@@ -41,7 +41,7 @@ const payForJob = async (req, res) => {
       // Update balances
       client.balance -= job.price;
       contractor.balance += job.price;
-      contractor.status = 'terminated'  // assuming the job got completed after that only client is making payment.
+      // contractor.status = 'terminated'  // assuming the job got completed after that only client is making payment.
       job.paid = true;
       job.paymentDate = new Date();
 
