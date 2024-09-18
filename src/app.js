@@ -8,7 +8,9 @@ require('./config/db')
 
 // Importing routes
 const contractsRoutes = require('./routes/contract.route')
+const jobsRoutes = require('./routes/jobs.route')
 
 app.use('/contracts', contractsRoutes)
+app.use('/jobs', jobsRoutes)
 
 module.exports = app;
