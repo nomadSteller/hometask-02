@@ -1,6 +1,11 @@
+const { setEndTime } = require('../helpers/genericFun');
 const { sequelize, Job, Profile, Contract } = require('../models');
 const { Op } = require('sequelize');
 
+/* 
+  Expected date format in YYYY/MM/DD
+  Eg: '2024/06/14'
+**/
 const getBestProfession = async (req, res) => {
   const { start, end } = req.query;
 
@@ -8,7 +13,7 @@ const getBestProfession = async (req, res) => {
     where: {
       paid: true,
       paymentDate: {
-        [Op.between]: [new Date(start), new Date(end)],
+        [Op.between]: [new Date(start), setEndTime(end)],
       },
     },
     include: [
@@ -32,7 +37,13 @@ const getBestProfession = async (req, res) => {
     limit: 1,
   });
 
-  res.json(jobs[0]);
+  let result = {total: null, profession: ''}
+  if( jobs.length > 0 ) {
+    result.total = jobs[0].dataValues.total,
+    result.profession = jobs[0].Contract.Contractor.profession
+  }
+
+  res.json(result);
 }
 
 module.exports = { getBestProfession }
